@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CINDY CONSULTING & COACHING - Actualités</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -9,16 +10,42 @@
     
     <style>
         /* Couleurs et Polices */
-        body { font-size: 1.1rem; background: white; color: #34495e; font-family: 'Poppins', sans-serif; }
+        body { 
+            /* Taille du texte augmentée pour une meilleure lisibilité générale */
+            font-size: 1.15rem; 
+            background: white; 
+            color: #34495e; 
+            font-family: 'Poppins', sans-serif; 
+        }
         h1, h2, h3, h4, .navbar-brand { font-family: 'Montserrat', sans-serif; font-weight: 700; }
         
-        /* Header et Navigation (Couleur Rouge Épuré) */
+        /* Header et Navigation (Rouge Épuré) */
         .navbar { background-color: #C0392B !important; } /* Rouge Élegant */
-        .navbar-brand { font-weight: 900 !important; font-size: 1.5rem; color: white !important; }
-        .nav-link { color: white !important; font-weight: 500; }
-        .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); border-radius: 5px; }
         
-        /* Footer (Couleur Vert Élégeant) */
+        /* Ajustement de la marque sur les petits écrans pour éviter le débordement */
+        .navbar-brand { 
+            font-weight: 900 !important; 
+            font-size: 1.25rem; /* Taille légèrement réduite */
+            color: white !important; 
+        }
+        
+        /* Rendre les liens plus cliquables et espacés */
+        .nav-link { 
+            color: white !important; 
+            font-weight: 500; 
+            padding: 10px 15px !important; /* Ajout d'espacement */
+        }
+        .nav-link:hover { 
+            background-color: rgba(255, 255, 255, 0.2); /* Fond plus visible au survol */
+            border-radius: 5px; 
+        }
+        
+        /* Rendre l'icône du nav-toggler (Hamburger) blanche */
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='white' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+        }
+
+        /* Footer (Vert Élégeant) */
         .footer { background-color: #27AE60; color: white; padding: 30px 0; } 
         .footer a { color: #D4EFDF; text-decoration: none; font-weight: 500; }
         .footer a:hover { color: white; }
@@ -28,15 +55,20 @@
         .btn-whatsapp:hover { background-color: #128C7E; color: white; }
 
         /* Badges d'Actualités */
-        .badge-custom { font-size: 0.9rem; padding: 5px 10px; border-radius: 20px; font-weight: 600; }
+        .badge-custom { 
+            font-size: 0.95rem; /* Taille du badge augmentée */
+            padding: 5px 10px; 
+            border-radius: 20px; 
+            font-weight: 600; 
+        }
         .badge-promotion { background: #FDEBD0; color: #E67E22; }
         .badge-alerte { background: #FADBD8; color: #C0392B; }
         .badge-maj { background: #D4EFDF; color: #27AE60; }
         
         /* Style pour l'image dans la carte d'actualité */
         .card-img-top-custom {
-            height: 200px; /* Taille fixe pour une grille uniforme */
-            object-fit: cover; /* Assure que l'image couvre la zone sans être déformée */
+            height: 200px; 
+            object-fit: cover; 
             border-top-left-radius: 12px; 
             border-top-right-radius: 12px;
         }
@@ -93,7 +125,7 @@
         }
         // ---------------------------------------------------
 
-        // NOUVEAU : Script pour formater la date après le chargement HTMX
+        // Script pour formater la date après le chargement HTMX
         function formatDateElements(targetElement) {
             const dateElements = targetElement.querySelectorAll('.js-format-date');
             dateElements.forEach(el => {
@@ -115,11 +147,11 @@
             }
             // Cible le modal après le chargement des détails
             if (event.detail.target.id === 'detail-modal-body') {
-                 // Formatage de la date DANS le modal
-                 formatDateElements(event.detail.target);
-                 // Affichage du modal après que le contenu soit chargé
-                 const detailModal = new bootstrap.Modal(document.getElementById('newsDetailModal'));
-                 detailModal.show();
+                // Formatage de la date DANS le modal
+                formatDateElements(event.detail.target);
+                // Affichage du modal après que le contenu soit chargé
+                const detailModal = new bootstrap.Modal(document.getElementById('newsDetailModal'));
+                detailModal.show();
             }
         });
     </script>
@@ -186,7 +218,9 @@
                             hx-target="#detail-modal-body"
                             hx-trigger="click"
                             hx-swap="innerHTML"
-                            hx-indicator="#loading-modal">
+                            hx-indicator="#loading-modal"
+                            data-bs-toggle="modal"
+                            data-bs-target="#newsDetailModal">
                             <i class="fas fa-arrow-right"></i> Lire la suite
                     </button>
                 </div>
@@ -287,24 +321,5 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-document.getElementById('all-news').addEventListener('htmx:afterRequest', function(evt) {
-    const target = evt.target;
-    // Vérifie si la requête a échoué (PocketBase non lancé, 404/403, etc.)
-    if (evt.detail.xhr.status !== 200) {
-        target.innerHTML = '<div class="alert alert-danger text-center">🛑 **Erreur de Connexion à PocketBase** (Code ' + evt.detail.xhr.status + ').<br>Vérifiez que PocketBase est lancé sur http://localhost:8090.</div>';
-    } else {
-        try {
-            const response = JSON.parse(evt.detail.xhr.responseText);
-            // PocketBase renvoie { items: [] } si vide, gérons ça pour un message plus joli
-            if (response.items && response.items.length === 0) {
-                target.innerHTML = '<div class="col-12 alert alert-info text-center">Pas encore de nouvelles actualités. Revenez bientôt !</div>';
-            }
-        } catch (e) {
-            // Ignorer l'erreur de parsing si le statut est 200 et la réponse n'est pas celle attendue
-        }
-    }
-});
-</script>
 </body>
 </html>
