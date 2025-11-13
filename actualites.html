@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>CINDY CONSULTING & COACHING - Actualités</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+    
+    <style>
+        /* Couleurs et Polices */
+        body { background: white; color: #34495e; font-family: 'Poppins', sans-serif; }
+        h1, h2, h3, h4, .navbar-brand { font-family: 'Montserrat', sans-serif; font-weight: 700; }
+        
+        /* Header et Navigation (Couleur Rouge Épuré) */
+        .navbar { background-color: #C0392B !important; } /* Rouge Élegant */
+        .navbar-brand { font-weight: 900 !important; font-size: 1.5rem; color: white !important; }
+        .nav-link { color: white !important; font-weight: 500; }
+        .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); border-radius: 5px; }
+        
+        /* Footer (Couleur Vert Élégeant) */
+        .footer { background-color: #27AE60; color: white; padding: 30px 0; } 
+        .footer a { color: #D4EFDF; text-decoration: none; font-weight: 500; }
+        .footer a:hover { color: white; }
+
+        /* Boutons WhatsApp */
+        .btn-whatsapp { background-color: #25D366; color: white; border: none; font-weight: 600; }
+        .btn-whatsapp:hover { background-color: #128C7E; color: white; }
+
+        /* Badges d'Actualités */
+        .badge-custom { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; font-weight: 600; }
+        .badge-promotion { background: #FDEBD0; color: #E67E22; }
+        .badge-alerte { background: #FADBD8; color: #C0392B; }
+        .badge-maj { background: #D4EFDF; color: #27AE60; }
+        
+        /* Style pour l'image dans la carte d'actualité */
+        .card-img-top-custom {
+            height: 200px; /* Taille fixe pour une grille uniforme */
+            object-fit: cover; /* Assure que l'image couvre la zone sans être déformée */
+            border-top-left-radius: 12px; 
+            border-top-right-radius: 12px;
+        }
+
+        /* Style de l'image dans le modal de détail */
+        .modal-detail-img {
+            max-height: 300px;
+            object-fit: cover;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+    </style>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // Fonction d'aide pour les classes de badge
+        function getBadgeClass(type) {
+            switch (type) {
+                case 'Promotion': return 'badge-promotion';
+                case 'Alerte': return 'badge-alerte';
+                case 'Mise à jour': return 'badge-maj';
+                default: return 'bg-secondary';
+            }
+        }
+        
+        // --- Fonctions de Modal et WhatsApp (inchangées) ---
+        function openWhatsAppModal(volet) {
+            const modal = new bootstrap.Modal(document.getElementById('contactModal'));
+            document.getElementById('volet_contact').value = volet;
+            document.getElementById('volet_contact_display').textContent = volet;
+            modal.show();
+        }
+        function sendWhatsApp() {
+            const volet = document.getElementById('volet_contact').value;
+            const nom = document.getElementById('nom_contact').value;
+            const email = document.getElementById('email_contact').value;
+            const message = document.getElementById('message_contact').value || "Je voudrais d’amples informations.";
+            
+            const text = encodeURIComponent(
+                "Bonjour CINDY,\n\n" +
+                "Volet : " + volet + "\n" +
+                "Nom : " + nom + "\n" +
+                "Email : " + email + "\n" +
+                "Message : " + message
+            );
+            
+            window.open('https://wa.me/22676984516?text=' + text, '_blank');
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+            modal.hide();
+        }
+        // ---------------------------------------------------
+
+        // NOUVEAU : Script pour formater la date après le chargement HTMX
+        function formatDateElements(targetElement) {
+            const dateElements = targetElement.querySelectorAll('.js-format-date');
+            dateElements.forEach(el => {
+                const utcDate = new Date(el.dataset.timestamp); // Utilisation de data-timestamp
+                if (!isNaN(utcDate)) {
+                    el.textContent = utcDate.toLocaleDateString('fr-FR', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric'
+                    });
+                }
+            });
+        }
+
+        document.addEventListener('htmx:afterSwap', function(event) {
+            // Cible le conteneur des cartes d'actualités après le chargement initial
+            if (event.detail.target.id === 'all-news') {
+                formatDateElements(event.detail.target);
+            }
+            // Cible le modal après le chargement des détails
+            if (event.detail.target.id === 'detail-modal-body') {
+                 // Formatage de la date DANS le modal
+                 formatDateElements(event.detail.target);
+                 // Affichage du modal après que le contenu soit chargé
+                 const detailModal = new bootstrap.Modal(document.getElementById('newsDetailModal'));
+                 detailModal.show();
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow">
+        <div class="container">
+            <a class="navbar-brand" href="index.html"><strong>CINDY CONSULTING & COACHING</strong></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html#accueil"><i class="fas fa-home"></i> Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services-section"><i class="fas fa-cogs"></i> Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#actualites-section"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div style="padding-top: 80px;"> 
+        <div class="container my-5" id="actualites-section">
+            <h1 class="display-5 mb-4" style="color: #1a5276;"><i class="fas fa-newspaper"></i> <strong>Toutes nos Actualités</strong></h1>
+            <p class="lead text-center mb-5">Restez informé des dernières mises à jour légales, alertes et promotions de CINDY CONSULTING.</p>
+
+            <div class="row"
+                 id="all-news"
+                 hx-get="http://localhost:8090/api/collections/actualites/records?sort=-created"
+                 hx-trigger="load" 
+                 hx-swap="innerHTML"
+                 hx-indicator="#loading-all-news">
+                
+                <div id="loading-all-news" class="htmx-indicator col-12 text-center text-secondary"><i class="fas fa-spinner fa-spin"></i> Chargement de toutes les actualités...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <template id="full-news-card-template">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100" style="border: 1px solid #C0392B; border-radius: 12px;">
+                {{#if image}}
+                <img src="http://localhost:8090/api/files/actualites/{{id}}/{{image}}" 
+                     class="card-img-top-custom" 
+                     alt="{{titre}} (Image)" 
+                     onerror="this.src='https://via.placeholder.com/600x200/95A5A6/white?text=CINDY+CONSULTING'; this.onerror=null;">
+                {{else}}
+                <img src="https://via.placeholder.com/600x200/95A5A6/white?text=CINDY+CONSULTING" 
+                     class="card-img-top-custom" 
+                     alt="Image par défaut">
+                {{/if}}
+
+                <div class="card-body d-flex flex-column">
+                    <span class="badge-custom {{js getBadgeClass(type_actu)}}">{{type_actu}}</span>
+                    <h5 class="card-title mt-2"><strong>{{titre}}</strong></h5>
+                    <p class="card-text">{{contenu | truncate 150}}</p>
+                    
+                    <small class="text-muted mt-auto">Publié le <span class="js-format-date" data-timestamp="{{created}}">...</span></small>
+                    
+                    <button class="btn btn-sm btn-outline-danger mt-3"
+                            hx-get="http://localhost:8090/api/collections/actualites/records/{{id}}"
+                            hx-target="#detail-modal-body"
+                            hx-trigger="click"
+                            hx-swap="innerHTML"
+                            hx-indicator="#loading-modal">
+                            <i class="fas fa-arrow-right"></i> Lire la suite
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <template id="news-detail-template">
+        <div class="text-center mb-3">
+             <span class="badge-custom {{js getBadgeClass(type_actu)}}">{{type_actu}}</span>
+        </div>
+
+        {{#if image}}
+        <img src="http://localhost:8090/api/files/actualites/{{id}}/{{image}}" 
+             class="modal-detail-img" 
+             alt="{{titre}}">
+        {{else}}
+        <img src="https://via.placeholder.com/800x300/95A5A6/white?text=CINDY+CONSULTING" 
+             class="modal-detail-img" 
+             alt="Image par défaut">
+        {{/if}}
+        
+        <p class="text-muted text-end">
+            Publié le <span class="js-format-date" data-timestamp="{{created}}">...</span>
+        </p>
+
+        <p>{{contenu}}</p>
+    </template>
+
+
+    <script>
+        // Indique à HTMX quel template utiliser pour générer la liste
+        htmx.defineTemplate("full-news-card-template", "list");
+        // Indique à HTMX quel template utiliser pour les détails dans le modal
+        htmx.defineTemplate("news-detail-template", "json");
+    </script>
+
+    <div class="modal fade" id="newsDetailModal" tabindex="-1" aria-labelledby="newsDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="newsDetailModalLabel">Détails de l'Actualité</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body" id="detail-modal-body">
+                    <div id="loading-modal" class="htmx-indicator text-center text-secondary"><i class="fas fa-spinner fa-spin"></i> Chargement des détails...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-whatsapp" onclick="openWhatsAppModal('Actualité - Demande d\'Information')"><i class="fab fa-whatsapp"></i> Contacter pour ce sujet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <footer class="footer text-center">
+        <div class="container">
+            <p class="mb-2 fst-italic">&copy; 2025 CINDY CONSULTING - Coaching. Tous droits réservés.</p>
+            <p class="mb-0">
+                <a href="#">Conditions Générales d'Utilisation</a> | 
+                <a href="#">Politique de Confidentialité</a> | 
+                <a href="#">Mentions Légales</a>
+            </p>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="contactModalLabel"><i class="fab fa-whatsapp"></i> Contactez-nous pour un conseil</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Annuler"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Vous contactez CINDY CONSULTING au sujet de : <strong id="volet_contact_display" class="text-primary"></strong></p>
+                    <input type="hidden" id="volet_contact">
+                    
+                    <div class="mb-3">
+                        <label for="nom_contact" class="form-label">Votre Nom :</label>
+                        <input type="text" class="form-control" id="nom_contact" placeholder="Entrez votre nom" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_contact" class="form-label">Votre Email :</label>
+                        <input type="email" class="form-control" id="email_contact" placeholder="Entrez votre email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="message_contact" class="form-label">Votre Message (saisie libre) :</label>
+                        <textarea class="form-control" id="message_contact" rows="3" placeholder="Veuillez détailler votre demande..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-whatsapp" onclick="sendWhatsApp()"><i class="fab fa-whatsapp"></i> Envoyer via WhatsApp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

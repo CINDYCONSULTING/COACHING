@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>CINDY CONSULTING & COACHING - Nos Services</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+    
+    <style>
+        /* Couleurs et Polices */
+        body { background: white; color: #34495e; font-family: 'Poppins', sans-serif; }
+        h1, h2, h3, h4, .navbar-brand { font-family: 'Montserrat', sans-serif; font-weight: 700; }
+        
+        /* Header et Navigation (Couleur Rouge Épuré) */
+        .navbar { background-color: #C0392B !important; } /* Rouge Élegant */
+        .navbar-brand { font-weight: 900 !important; font-size: 1.5rem; color: white !important; }
+        .nav-link { color: white !important; font-weight: 500; }
+        .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); border-radius: 5px; }
+        
+        /* Footer (Couleur Vert Élégeant) */
+        .footer { background-color: #27AE60; color: white; padding: 30px 0; } 
+        .footer a { color: #D4EFDF; text-decoration: none; font-weight: 500; }
+        .footer a:hover { color: white; }
+
+        /* Boutons WhatsApp */
+        .btn-whatsapp { background-color: #25D366; color: white; border: none; font-weight: 600; }
+        .btn-whatsapp:hover { background-color: #128C7E; color: white; }
+
+        /* Actualités (Réutilisés de l'admin) */
+        .badge-custom { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; font-weight: 600; }
+        .badge-promotion { background: #FDEBD0; color: #E67E22; }
+        .badge-alerte { background: #FADBD8; color: #C0392B; }
+        .badge-maj { background: #D4EFDF; color: #27AE60; }
+
+        /* Services Cards (Design 3D élégant) */
+        .service-block { 
+            background: #FFFFFF; 
+            border: 1px solid #C0392B; 
+            border-radius: 12px; 
+            padding: 25px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
+            transition: all 0.3s;
+        }
+        .service-block:hover {
+             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+             transform: translateY(-3px);
+        }
+        .service-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        
+        /* Hiérarchie Services */
+        /* Pour le conteneur des services d'assistance chargés dynamiquement */
+        #assistance-services-container { border-left: 5px solid #27AE60; padding-left: 20px; }
+        /* Pour le conteneur des services juridiques chargés dynamiquement */
+        #juridique-services-container { border-left: 5px solid #C0392B; padding-left: 20px; }
+        
+        /* Bloc de Titre Spécial */
+        .special-title-block {
+            background-color: #D4EFDF; /* Vert très clair */
+            color: #27AE60;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        function getBadgeClass(type) {
+            switch (type) {
+                case 'Promotion': return 'badge-promotion';
+                case 'Alerte': return 'badge-alerte';
+                case 'Mise à jour': return 'badge-maj';
+                default: return 'bg-secondary';
+            }
+        }
+        function openWhatsAppModal(volet) {
+            const modal = new bootstrap.Modal(document.getElementById('contactModal'));
+            document.getElementById('volet_contact').value = volet;
+            document.getElementById('volet_contact_display').textContent = volet;
+            modal.show();
+        }
+        function sendWhatsApp() {
+            const volet = document.getElementById('volet_contact').value;
+            const nom = document.getElementById('nom_contact').value;
+            const email = document.getElementById('email_contact').value;
+            const message = document.getElementById('message_contact').value || "Je voudrais d’amples informations.";
+            
+            const text = encodeURIComponent(
+                "Bonjour CINDY,\n\n" +
+                "Volet : " + volet + "\n" +
+                "Nom : " + nom + "\n" +
+                "Email : " + email + "\n" +
+                "Message : " + message
+            );
+            
+            window.open('https://wa.me/22676984516?text=' + text, '_blank');
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+            modal.hide();
+        }
+        
+        // Fonction HTMX pour regrouper les services
+        // Cette fonction sera appelée par hx-get et PocketBase pour manipuler le JSON.
+        function groupByCategorie(data) {
+             const groups = {
+                 'Assistance': [],
+                 'Juridique': []
+             };
+
+             if (data && data.items) {
+                 data.items.forEach(service => {
+                     const categorie = service.categorie_service;
+                     if (groups.hasOwnProperty(categorie)) {
+                         groups[categorie].push(service);
+                     }
+                 });
+             }
+             
+             // Retourne l'objet avec les services groupés
+             return groups;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+             // 1. Définir le template pour le rendu des listes PocketBase
+             htmx.defineTemplate("service-template", "json.Assistance");
+             htmx.defineTemplate("service-template-juridique", "json.Juridique");
+             
+             // 2. Afficher un message si aucun service n'est chargé (optionnel)
+             document.getElementById('service-loader').addEventListener('htmx:afterRequest', function(evt) {
+                 const target = document.getElementById('main-services-list');
+                 if (evt.detail.xhr.status === 200) {
+                     try {
+                         const response = JSON.parse(evt.detail.xhr.responseText);
+                         if (!response.items || response.items.length === 0) {
+                             target.innerHTML = '<div class="alert alert-warning text-center">Aucun service n\'a été trouvé. Veuillez vérifier la base de données.</div>';
+                         }
+                     } catch (e) {
+                         // Erreur de parsing
+                     }
+                 } else if (evt.detail.xhr.status !== 200) {
+                      target.innerHTML = '<div class="alert alert-danger text-center">Erreur de chargement des services. Code: ' + evt.detail.xhr.status + '</div>';
+                 }
+             });
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow">
+        <div class="container">
+            <a class="navbar-brand" href="index.html"><strong>CINDY CONSULTING & COACHING</strong></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html#accueil"><i class="fas fa-home"></i> Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#services-section"><i class="fas fa-cogs"></i> Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#actualites-section"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div style="padding-top: 80px;"> 
+        <div class="container my-5">
+            <div class="special-title-block"><i class="fas fa-cogs"></i> <strong>Nos Services et Expertises</strong></div>
+            <p class="lead text-center mb-5">Un accompagnement professionnel et personnalisé dans tous les volets de votre vie personnelle et professionnelle.</p>
+
+            <div class="row mt-5 justify-content-center">
+                
+                <div class="col-lg-10" id="main-services-list">
+                    
+                    <div id="service-loader"
+                         hx-get="http://localhost:8090/api/collections/services/records?perPage=50&sort=+categorie_service,+titre"
+                         hx-trigger="load" 
+                         hx-swap="outerHTML"
+                         hx-target="#main-services-list"
+                         hx-on::after-request="htmx.process(document.getElementById('assistance-services-container')); htmx.process(document.getElementById('juridique-services-container'))"
+                         hx-params="js:groupByCategorie(json)">
+                        
+                        <div class="text-center text-secondary mb-4"><i class="fas fa-spinner fa-spin"></i> Chargement des services...</div>
+
+                        <div id="assistance-services-container" class="assistance-section mb-5">
+                            <h2 class="mb-4" style="color: #27AE60;"><i class="fas fa-hands-helping"></i> <strong>Assistance</strong></h2>
+                            </div>
+
+                        <div id="juridique-services-container" class="juridique-section mb-5">
+                            <h2 class="mb-4" style="color: #C0392B;"><i class="fas fa-balance-scale"></i> <strong>Juridique</strong></h2>
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <template id="service-template">
+        <div class="service-block">
+            <h5 class="card-title" style="color: #1a5276;"><i class="{{icone}} service-icon"></i> <strong>{{titre}}</strong></h5>
+            <p class="card-text">{{description}}</p>
+            <button class="btn btn-whatsapp btn-sm mt-2" onclick="openWhatsAppModal('{{volet_contact}}')"><i class="fab fa-whatsapp"></i> Demander Conseil</button>
+        </div>
+    </template>
+    
+    <template id="service-template-juridique">
+        <div class="service-block">
+            <h5 class="card-title" style="color: #1a5276;"><i class="{{icone}} service-icon"></i> <strong>{{titre}}</strong></h5>
+            <p class="card-text">{{description}}</p>
+            <button class="btn btn-whatsapp btn-sm mt-2" onclick="openWhatsAppModal('{{volet_contact}}')"><i class="fab fa-whatsapp"></i> Demander Conseil</button>
+        </div>
+    </template>
+
+
+    <footer class="footer text-center">
+        <div class="container">
+            <p class="mb-2 fst-italic">&copy; 2025 CINDY CONSULTING - Coaching. Tous droits réservés.</p>
+            <p class="mb-0">
+                <a href="#">Conditions Générales d'Utilisation</a> | 
+                <a href="#">Politique de Confidentialité</a> | 
+                <a href="#">Mentions Légales</a>
+            </p>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="contactModalLabel"><i class="fab fa-whatsapp"></i> Contactez-nous pour un conseil</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Annuler"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Vous contactez CINDY CONSULTING au sujet de : <strong id="volet_contact_display" class="text-primary"></strong></p>
+                    <input type="hidden" id="volet_contact">
+                    
+                    <div class="mb-3">
+                        <label for="nom_contact" class="form-label">Votre Nom :</label>
+                        <input type="text" class="form-control" id="nom_contact" placeholder="Entrez votre nom" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_contact" class="form-label">Votre Email :</label>
+                        <input type="email" class="form-control" id="email_contact" placeholder="Entrez votre email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="message_contact" class="form-label">Votre Message (saisie libre) :</label>
+                        <textarea class="form-control" id="message_contact" rows="3" placeholder="Veuillez détailler votre demande..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-whatsapp" onclick="sendWhatsApp()"><i class="fab fa-whatsapp"></i> Envoyer via WhatsApp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
