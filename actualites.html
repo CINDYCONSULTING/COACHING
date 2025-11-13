@@ -9,7 +9,7 @@
     
     <style>
         /* Couleurs et Polices */
-        body { background: white; color: #34495e; font-family: 'Poppins', sans-serif; }
+        body { font-size: 1.1rem; background: white; color: #34495e; font-family: 'Poppins', sans-serif; }
         h1, h2, h3, h4, .navbar-brand { font-family: 'Montserrat', sans-serif; font-weight: 700; }
         
         /* Header et Navigation (Couleur Rouge Épuré) */
@@ -28,7 +28,7 @@
         .btn-whatsapp:hover { background-color: #128C7E; color: white; }
 
         /* Badges d'Actualités */
-        .badge-custom { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; font-weight: 600; }
+        .badge-custom { font-size: 0.9rem; padding: 5px 10px; border-radius: 20px; font-weight: 600; }
         .badge-promotion { background: #FDEBD0; color: #E67E22; }
         .badge-alerte { background: #FADBD8; color: #C0392B; }
         .badge-maj { background: #D4EFDF; color: #27AE60; }
@@ -287,5 +287,24 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('all-news').addEventListener('htmx:afterRequest', function(evt) {
+    const target = evt.target;
+    // Vérifie si la requête a échoué (PocketBase non lancé, 404/403, etc.)
+    if (evt.detail.xhr.status !== 200) {
+        target.innerHTML = '<div class="alert alert-danger text-center">🛑 **Erreur de Connexion à PocketBase** (Code ' + evt.detail.xhr.status + ').<br>Vérifiez que PocketBase est lancé sur http://localhost:8090.</div>';
+    } else {
+        try {
+            const response = JSON.parse(evt.detail.xhr.responseText);
+            // PocketBase renvoie { items: [] } si vide, gérons ça pour un message plus joli
+            if (response.items && response.items.length === 0) {
+                target.innerHTML = '<div class="col-12 alert alert-info text-center">Pas encore de nouvelles actualités. Revenez bientôt !</div>';
+            }
+        } catch (e) {
+            // Ignorer l'erreur de parsing si le statut est 200 et la réponse n'est pas celle attendue
+        }
+    }
+});
+</script>
 </body>
 </html>
