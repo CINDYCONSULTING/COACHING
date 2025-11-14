@@ -6,31 +6,49 @@
     <title>Site Suspendu</title>
     <style>
         body {
-            /* Centre le contenu au milieu de l'écran */
+            /* Styles généraux du corps */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #f0f0f0; /* Fond léger pour contraste */
+            background-color: #f0f0f0; 
+            font-family: Arial, sans-serif;
         }
 
         .message-container {
-            /* Styles du message */
+            /* Styles du conteneur du message */
             color: #FF0000; /* Rouge vif */
-            font-size: 80px; /* Très grosse taille */
-            font-family: Arial, sans-serif; /* Police épaisse et lisible */
             font-weight: 900; /* Extra gras */
             text-align: center;
             padding: 20px;
             border: 5px solid #FF0000;
             border-radius: 15px;
             background-color: #FFFFFF;
+            /* Le 'max-width' empêche le débordement sur les très grands écrans */
+            max-width: 90%; 
+            /* La marge automatique centre le bloc sur l'axe horizontal */
+            margin: 20px auto; 
+            /* Utilisation d'une unité relative pour la taille de police sur grand écran */
+            font-size: 80px; 
+            /* Empêche le texte de sortir du conteneur */
+            word-wrap: break-word; 
         }
 
         .emoji {
-            font-size: 1.2em; /* Taille légèrement plus grande pour l'emoji */
+            font-size: 1.2em;
             margin-left: 15px;
+        }
+
+        /* MEDIA QUERY pour adapter la taille de police aux téléphones (écrans < 600px) */
+        @media (max-width: 600px) {
+            .message-container {
+                /* Réduction drastique de la taille de police pour que tout tienne */
+                font-size: 10vw; /* 10% de la largeur de la fenêtre (VW) */
+                /* On s'assure que le conteneur prend presque toute la largeur du téléphone */
+                max-width: 95%; 
+                padding: 15px;
+            }
         }
     </style>
 </head>
